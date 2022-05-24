@@ -21,13 +21,15 @@ theme_color = "pink"
 
 center = true
 
-author = "Robert Walter"
+author = "Rob Walter"
 show_author = true
 logo_text = "robWalt.dev"
 
 show_categories = true
 show_tags = true
+show_date = true
 
 main_menu = [
-    {url="/posts/", name = "posts"},
+    {url="/posts", name = "Posts"},
+    {url="/about", name = "About"},
 ]
