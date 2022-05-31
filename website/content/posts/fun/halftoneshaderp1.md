@@ -3,7 +3,11 @@ title = "Half Tone Shader - Part 1"
 path = "posts/fun/halftoneshaderp1"
 date = 2022-05-24
 template = "page.html"
+[taxonomies]
+tags = ["rust", "graphics", "shader", "bevy", "wgsl"]
 +++
+
+# Motivation
 
 The other day I was scrolling through twitter when stumbling upon this gem of a post:
 
@@ -47,3 +51,5 @@ This little series will cover the following topics:
 1. Minimum setup of bevy to enable working on shaders 
 2. A little bit of theory about the half-tone shader and colors 
 3. The implementation of the shader
+
+[Go to part 2](../halftoneshaderp2)
