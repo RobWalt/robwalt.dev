@@ -34,6 +34,7 @@ show_tags = true
 show_date = true
 
 main_menu = [
+    {url="/small_enlightenments", name = "Small Enlightenments"},
     {url="/posts", name = "Posts"},
     {url="/books", name = "Books"},
     {url="/about", name = "About"},

@@ -1,6 +1,6 @@
 +++
 title = "Half Tone Shader - Part 1"
-path = "posts/fun/halftoneshaderp1"
+path = "posts/various/halftoneshaderp1"
 date = 2022-05-24
 template = "page.html"
 [taxonomies]
