@@ -1,10 +1,10 @@
 +++
 title = "The day I finally understood \"Traversable\""
-path = "small_enlightenments/functional/traverse"
+path = "small_enlightenments/functional/traverse_haskell"
 date = 2022-06-02
 template = "page.html"
 [taxonomies]
-tags = ["functional programming", "haskell", "rust", "traverse"]
+tags = ["functional programming", "haskell", "traverse", "traversable"]
 +++
 
 While reading through [my haskell programming book](https://haskellbook.com/) I
