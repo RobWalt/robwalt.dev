@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>Half Tone Shader - Part 2 - Rob Walter</title>
+    
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"><meta name="description" content=" Half Tone Shader - Part 2 "/>
+    <meta property="og:title" content=" -&nbsp;Half Tone Shader - Part 2" />
+    <meta property="og:type" content="website"/><meta property="og:url" content="https:&#x2F;&#x2F;robwalt.dev&#x2F;posts&#x2F;various&#x2F;halftoneshaderp2&#x2F;"/><meta property="og:description" content=""/>
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://robwalt.dev/style.css?h=2c8d17b7aa9535c98dc3b725d1bc9c6b2e12b81df07df95e5d9af6dcb88e7c78">
+    <link rel="stylesheet" href=" https://robwalt.dev/color/orange.css?h=aee32970acd19d5cf88d42505796de4e31aa73fc58a07e61aa2f57fae305de50">
+    
+</head>
+    <body>
+        <div class="container center">
+<header class="header">
+    <div class="header__inner">
+        <div class="header__logo">
+            <a href="https:&#x2F;&#x2F;robwalt.dev">
+    <div class="logo">
+        robWalt.dev
+    </div>
+</a>
+        </div>
+        <div class="menu-trigger">menu</div>
+    </div>
+    
+    <nav class="menu">
+        <ul class="menu__inner menu__inner--desktop">
+            
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li></ul>
+
+        <ul class="menu__inner menu__inner--mobile">
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li>
+        </ul>
+    </nav>
+
+    </header>
+<div class="content"><article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https:&#x2F;&#x2F;robwalt.dev&#x2F;posts&#x2F;various&#x2F;halftoneshaderp2&#x2F;">Half Tone Shader - Part 2</a>
+            </h1>
+            
+    <div class="post-meta">
+        <span class="post-date">2022.05.30
+                </span>
+
+        <span class="post-author">
+    ::
+    Rob Walter</span>
+
+        
+
+    
+    </div>
+
+            
+    
+</header><p><a href="../halftoneshaderp1">Go to part 1</a></p>
+<h1 id="setting-up-an-environment-for-wgsl">Setting up an environment for WGSL</h1>
+<p>Since we are pretty darn cool and we want to learn something new and fancy, we are obviously going to write our shader in <a href="https://gpuweb.github.io/gpuweb/wgsl/">WGSL</a> as spoilered in the last part. But beeing cool comes at a price. We can't just use some easy tool like the <a href="https://www.shadertoy.com/">ShaderToy</a> to develop the shader since it doesn't support WGSL (or at least I'm not aware of it). This means, we need some other home cooked environment in which we can try out our shaders. Unfortunately, this is not done in a minute either.</p>
+<p>Since we are lazy, we try to take some shortcuts at least. Instead of setting up a whole <a href="https://sotrh.github.io/learn-wgpu/">WGPU</a> project, we are just going to use a game engine called <a href="https://bevyengine.org/">Bevy</a>, which abstracts at least some of the boilerplate away. Of course this has some tradeoffs in terms of low level control, but we just want to have a sandbox where we can test some shader programs. In our case the &quot;sandbox&quot; will be a boring plane in 2D space. This is going to be our empty wall, on which we will draw beautiful pieces of art. But I digress ... Let's finally start</p>
+<h2 id="setting-up-the-bevy-boilerplate">Setting up the Bevy boilerplate</h2>
+<p>First of all, we are going to create an empty project</p>
+<pre data-lang="zsh" style="background-color:#2b303b;color:#c0c5ce;" class="language-zsh "><code class="language-zsh" data-lang="zsh"><span style="color:#bf616a;">cargo</span><span> new wgsl-tutorial
+</span></code></pre>
+<p>After that we will include some recent version of bevy in the <code>Cargo.toml</code> file. Attention! Deviate from the versions used in this tutorial at your own risk! </p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#65737e;"># ...
+</span><span style="color:#65737e;"># blah
+</span><span style="color:#65737e;"># ...
+</span><span>
+</span><span>[dependencies]
+</span><span style="color:#bf616a;">bevy </span><span>= </span><span style="color:#d08770;">0.7
+</span></code></pre>
+<p>After that ... it's coding time 😎. Open your <code>main.rs</code> and plug in that sweet and juicy bevy boilerplate code:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::time::Duration;
+</span><span>
+</span><span style="color:#b48ead;">use </span><span>bevy::prelude::*;
+</span><span style="color:#b48ead;">use </span><span>bevy::window::PresentMode;
+</span><span style="color:#b48ead;">use </span><span>bevy::winit::{UpdateMode, WinitSettings};
+</span><span>
+</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">RESOLUTION</span><span>: </span><span style="color:#b48ead;">f32 </span><span>= </span><span style="color:#d08770;">16.0 </span><span>/ </span><span style="color:#d08770;">9.0</span><span>;
+</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">HEIGHT</span><span>: </span><span style="color:#b48ead;">f32 </span><span>= </span><span style="color:#d08770;">900.0</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    App::new()
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(WindowDescriptor {
+</span><span>            title: &quot;</span><span style="color:#a3be8c;">BEVY SHADER TEST</span><span>&quot;.</span><span style="color:#96b5b4;">to_string</span><span>(),
+</span><span>            width: </span><span style="color:#d08770;">HEIGHT </span><span>* </span><span style="color:#d08770;">RESOLUTION</span><span>,
+</span><span>            height: </span><span style="color:#d08770;">HEIGHT</span><span>,
+</span><span>            present_mode: PresentMode::Mailbox,
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        })
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(WinitSettings {
+</span><span>            focused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            unfocused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        })
+</span><span>        .</span><span style="color:#96b5b4;">add_plugins</span><span>(DefaultPlugins)
+</span><span>        .</span><span style="color:#96b5b4;">add_startup_system_to_stage</span><span>(StartupStage::PreStartup, setup)
+</span><span>        .</span><span style="color:#96b5b4;">run</span><span>();
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">setup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands) {
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn_bundle</span><span>(OrthographicCameraBundle::new_2d());
+</span><span>}
+</span></code></pre>
+<p>This will basically just set up an empty window with a grey background like this one over here.</p>
+<p><img src="../../../halftoneshader/boilerplate.png" alt="Screenshot Boilerplate" /></p>
+<p>There are also some nice extras for you in there 🍬🍬🍬</p>
+<p>We used a pretty new feature of bevy, the Power Saving Modes.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>        </span><span style="color:#65737e;">// ...
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(WinitSettings {
+</span><span>            focused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            unfocused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        })
+</span><span>        </span><span style="color:#65737e;">// ...
+</span></code></pre>
+<p>Basically the screen is rendered less frequently with these settings so that your computer won't go boom 🔥 when there is nothing changing on the screen but you still want occasional screen updates. You don't need to use the Power Saving Modes, but it's a neet feature I just wanted to highlight here. After all that has been done, we can start integrating some shader code.</p>
+<p>The following code was heavily inspired by some well structured videos on youtube from my guy <a href="https://www.youtube.com/channel/UC7v3YEDa603x_84PgCPytzA">Logic Projects</a>. In particulat I'm talking about these two videos of his:</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=EKS0SSq8UPQ">Basic Shader Setup in Bevy</a></li>
+<li><a href="https://www.youtube.com/watch?v=_hX37bsdYao">Bind Groups Explained</a></li>
+</ul>
+<p>This is going to be a bit lengthy, but when we made it through, we don't need to touch the code that follows ever again and we can stay in shader-land as long as we want.</p>
+<h2 id="setting-up-a-material-for-rendering">Setting up a material for rendering</h2>
+<p>Basically, what we want is just a rendered rectangle on which we can apply our shader. The shader will be encapsulated in something called a &quot;material&quot;. To define our very own material for our own shader, we start by creating a new and empty <code>struct</code> for it. Since we will paint with our shaders on it, let's give it a funny name: </p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MonaLisaMaterial;
+</span></code></pre>
+<p>We also need to derive some traits for it:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">derive</span><span>(Debug, Clone, TypeUuid)]                   </span><span style="color:#65737e;">// &lt;- new
+</span><span>#[</span><span style="color:#bf616a;">uuid </span><span>= &quot;</span><span style="color:#a3be8c;">a28d417a-d9c4-11ec-9d64-0242ac120002</span><span>&quot;]    </span><span style="color:#65737e;">// &lt;- new
+</span><span style="color:#b48ead;">struct </span><span>MonaLisaMaterial;
+</span></code></pre>
+<p>The <code>TypeUuid</code> trait here is something that comes from bevy and is needed implicitly by another trait we will implement soon.</p>
+<p>Since we want to display a picture of the Mona Lisa on the rectangle, we need to store some information for some picture in that <code>struct</code> as well, so let's quickly add it.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">derive</span><span>(Debug, Clone, TypeUuid)]               
+</span><span>#[</span><span style="color:#bf616a;">uuid </span><span>= &quot;</span><span style="color:#a3be8c;">a28d417a-d9c4-11ec-9d64-0242ac120002</span><span>&quot;]
+</span><span style="color:#b48ead;">struct </span><span>MonaLisaMaterial{
+</span><span>    </span><span style="color:#bf616a;">image</span><span>: Handle&lt;Image&gt;,                           </span><span style="color:#65737e;">// &lt;- new
+</span><span>}
+</span></code></pre>
+<p>To make data from our CPU world available in the GPU world, we will additionally have to define a second <code>struct</code> which will represent our data on the GPU:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>GPUMonaLisaMaterial {
+</span><span>    </span><span style="color:#bf616a;">bind_group</span><span>: BindGroup
+</span><span>}
+</span></code></pre>
+<p>It contains a <code>BindGroup</code>, which is essentially responsible for mapping the CPU data to the GPU data.</p>
+<p>Finally, we define a new resource, which will hold the image, on which we will apply our Half-Tone-Shader.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">derive</span><span>(Deref)]
+</span><span style="color:#b48ead;">struct </span><span>TheMonaLisaHerself(Handle&lt;Image&gt;);
+</span></code></pre>
+<p>Oops, we should probably also load her in the setup step of our bevy app, so let's quickly add that:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">//                               | new
+</span><span style="color:#65737e;">//                               v
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">setup</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands, </span><span style="color:#bf616a;">assets</span><span>: Res&lt;AssetServer&gt;) {
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn_bundle</span><span>(OrthographicCameraBundle::new_2d());
+</span><span>    commands.</span><span style="color:#96b5b4;">insert_resource</span><span>(TheMonaLisaHerself(assets.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">mona_lisa.png</span><span>&quot;))); </span><span style="color:#65737e;">// &lt;- new
+</span><span>}
+</span></code></pre>
+<p>Now, that the definition of all of those <code>struct</code>s is out of the way, we can begin to implement some funny <code>traits</code> (spoiler: not really funny) for our <code>MonaLisaMaterial</code>. The traits we're going to implement are <code>RenderAsset</code> and <code>Material2d</code>. Let's start first with <code>RenderAsset</code> because there we can find some juicy 🍸  associated types. </p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = ...
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = ...
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = ...
+</span><span>
+</span><span>    ... other stuff ...
+</span><span>}
+</span></code></pre>
+<p>Let's take a short look at this. The type <code>ExtractedAsset</code> is the type of data we want to extract from our CPU-World. This is exactly the <code>MonaLisaMaterial</code> including the image handle for the Mona Lisa.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = MonaLisaMaterial;          </span><span style="color:#65737e;">// &lt;- new
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = ...
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = ...
+</span><span>
+</span><span>    ... other stuff ...
+</span><span>}
+</span></code></pre>
+<p>The <code>PreparedAsset</code> is the stuff that gets send to the GPU. We already defined a type for this, it's our beloved <code>GPUMonaLisaMaterial</code>.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = MonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = GPUMonaLisaMaterial;        </span><span style="color:#65737e;">// &lt;- new
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = ...
+</span><span>
+</span><span>    ... other stuff ...
+</span><span>}
+</span></code></pre>
+<p>The <code>Param</code> type defines other parameters which we're going to need in the functions of the <code>RenderAsset</code> trait. They may seem a bit arbitrary, but each one fulfills a important tast.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = MonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = GPUMonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = (
+</span><span>        SRes&lt;RenderDevice&gt;,
+</span><span>        SRes&lt;Material2dPipeline&lt;MonaLisaMaterial&gt;&gt;,
+</span><span>        SRes&lt;RenderAssets&lt;Image&gt;&gt;
+</span><span>    );
+</span><span>
+</span><span>    ... other stuff ...
+</span><span>}
+</span></code></pre>
+<p>Here is a short list to explain those parts shortly:</p>
+<ul>
+<li><code>SRes</code> is basically just a <code>Res</code> with <code>static</code> lifetime</li>
+<li>The <code>RenderDevice</code> is used as a connecting part between CPU and GPU world to create the bindings</li>
+<li>The <code>Material2dPipeline</code> holds information about the layout of the data and the image textures</li>
+<li>The <code>RenderAssets&lt;Image&gt;</code> basically just give us access to all loaded image handles</li>
+</ul>
+<p>Pheww, now that this is out of our way, we can continue our journey through render-land 🗻. There are two functions on that trait which we need to implement. They are called <code>extract_asset</code> and <code>prepare_asset</code>. Let's implement <code>extract_asset</code> first because it's pretty simple.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = MonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = GPUMonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = (
+</span><span>        SRes&lt;RenderDevice&gt;,
+</span><span>        SRes&lt;Material2dPipeline&lt;MonaLisaMaterial&gt;&gt;,
+</span><span>        SRes&lt;RenderAssets&lt;Image&gt;&gt;
+</span><span>    );
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">extract_asset</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; </span><span style="color:#b48ead;">Self::</span><span>ExtractedAsset {       </span><span style="color:#65737e;">// &lt;- new
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#96b5b4;">clone</span><span>()                                        </span><span style="color:#65737e;">// &lt;- new
+</span><span>    }                                                       </span><span style="color:#65737e;">// &lt;- new
+</span><span>}
+</span></code></pre>
+<p>The idea behind <code>extract_asset</code> is basically to suck all the desired information out of CPU-World and collect it in one central place. After that's done guess what follows? ... Yes, you're completly right: <code>prepare_asset</code></p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>RenderAsset </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    </span><span style="color:#b48ead;">type </span><span>ExtractedAsset = MonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>PreparedAsset = GPUMonaLisaMaterial;
+</span><span>    </span><span style="color:#b48ead;">type </span><span>Param = (
+</span><span>        SRes&lt;RenderDevice&gt;,
+</span><span>        SRes&lt;Material2dPipeline&lt;MonaLisaMaterial&gt;&gt;,
+</span><span>        SRes&lt;RenderAssets&lt;Image&gt;&gt;
+</span><span>    );
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">extract_asset</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; </span><span style="color:#b48ead;">Self::</span><span>ExtractedAsset {
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#96b5b4;">clone</span><span>()
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">prepare_asset</span><span>(                                                               </span><span style="color:#65737e;">// |&lt;- new
+</span><span>        </span><span style="color:#bf616a;">extracted_asset</span><span>: </span><span style="color:#b48ead;">Self::</span><span>ExtractedAsset,                                      </span><span style="color:#65737e;">// |
+</span><span>        (</span><span style="color:#bf616a;">render_device</span><span>, </span><span style="color:#bf616a;">pipeline</span><span>, </span><span style="color:#bf616a;">images</span><span>): &amp;</span><span style="color:#b48ead;">mut </span><span>SystemParamItem&lt;</span><span style="color:#b48ead;">Self::</span><span>Param&gt;,       </span><span style="color:#65737e;">// |
+</span><span>    ) -&gt; Result&lt;</span><span style="color:#b48ead;">Self::</span><span>PreparedAsset, PrepareAssetError&lt;</span><span style="color:#b48ead;">Self::</span><span>ExtractedAsset&gt;&gt; {     </span><span style="color:#65737e;">// |
+</span><span>        </span><span style="color:#b48ead;">let </span><span>(view, sampler) = pipeline                                              </span><span style="color:#65737e;">// |
+</span><span>            .mesh2d_pipeline                                                        </span><span style="color:#65737e;">// |
+</span><span>            .</span><span style="color:#96b5b4;">get_image_texture</span><span>(images, &amp;Some(extracted_asset.image.</span><span style="color:#96b5b4;">clone</span><span>()))        </span><span style="color:#65737e;">// |
+</span><span>            .</span><span style="color:#96b5b4;">ok_or</span><span>(PrepareAssetError::RetryNextUpdate(extracted_asset))?;           </span><span style="color:#65737e;">// |
+</span><span>                                                                                    </span><span style="color:#65737e;">// |
+</span><span>        </span><span style="color:#b48ead;">let</span><span> bind_group = render_device.</span><span style="color:#96b5b4;">create_bind_group</span><span>(&amp;BindGroupDescriptor {     </span><span style="color:#65737e;">// |
+</span><span>            label: None,                                                            </span><span style="color:#65737e;">// |
+</span><span>            layout: &amp;pipeline.material2d_layout,                                    </span><span style="color:#65737e;">// |
+</span><span>            entries: &amp;[                                                             </span><span style="color:#65737e;">// |
+</span><span>                BindGroupEntry {                                                    </span><span style="color:#65737e;">// |
+</span><span>                    binding: </span><span style="color:#d08770;">0</span><span>,                                                     </span><span style="color:#65737e;">// |
+</span><span>                    resource: BindingResource::TextureView(view),                   </span><span style="color:#65737e;">// |
+</span><span>                },                                                                  </span><span style="color:#65737e;">// |
+</span><span>                BindGroupEntry {                                                    </span><span style="color:#65737e;">// |
+</span><span>                    binding: </span><span style="color:#d08770;">1</span><span>,                                                     </span><span style="color:#65737e;">// |
+</span><span>                    resource: BindingResource::Sampler(sampler),                    </span><span style="color:#65737e;">// |
+</span><span>                },                                                                  </span><span style="color:#65737e;">// |
+</span><span>            ],                                                                      </span><span style="color:#65737e;">// |
+</span><span>        });                                                                         </span><span style="color:#65737e;">// |
+</span><span>        Ok(GPUMonaLisaMaterial { bind_group })                                          </span><span style="color:#65737e;">// |
+</span><span>    }                                                                               </span><span style="color:#65737e;">// |&lt;- new
+</span><span>}
+</span></code></pre>
+<p>Ooooof, now that is a big chunk of code. Let's process it slowly:</p>
+<p>The first part </p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>        </span><span style="color:#65737e;">// ...
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let </span><span>(view, sampler) = pipeline                                              
+</span><span>            .mesh2d_pipeline                                                        
+</span><span>            .</span><span style="color:#96b5b4;">get_image_texture</span><span>(images, &amp;Some(extracted_asset.image.</span><span style="color:#96b5b4;">clone</span><span>()))        
+</span><span>            .</span><span style="color:#96b5b4;">ok_or</span><span>(PrepareAssetError::RetryNextUpdate(extracted_asset))?;           
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// ...
+</span></code></pre>
+<p>basically just tries to fetch the image data, which is comprised of a <code>view</code> and a <code>sampler</code>. Since the image has a certain loading time on startup, this part can fail and we return an error indicating the failure in that case. The error basically tells the app to just try to execute the <code>prepare_asset</code> function at a later point in time again. The next part then</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>        </span><span style="color:#65737e;">// ...
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let</span><span> bind_group = render_device.</span><span style="color:#96b5b4;">create_bind_group</span><span>(&amp;BindGroupDescriptor {
+</span><span>            label: None,                                                       
+</span><span>            layout: &amp;pipeline.material2d_layout,                               
+</span><span>            entries: &amp;[                                                        
+</span><span>                BindGroupEntry {                                               
+</span><span>                    binding: </span><span style="color:#d08770;">0</span><span>,                                                
+</span><span>                    resource: BindingResource::TextureView(view),              
+</span><span>                },                                                             
+</span><span>                BindGroupEntry {                                               
+</span><span>                    binding: </span><span style="color:#d08770;">1</span><span>,                                                
+</span><span>                    resource: BindingResource::Sampler(sampler),               
+</span><span>                },                                                             
+</span><span>            ],                                                                 
+</span><span>        });                                                                    
+</span><span>        Ok(GPUMonaLisaMaterial { bind_group })                                          
+</span></code></pre>
+<p>is concerned with the creation of the <code>BindGroup</code> which we will store and return then in the <code>GPUMonaLisaMaterial</code>. Here we basically bring the data in the right format before the <code>prepare_asset</code> function poops it out into the GPU.</p>
+<p>And that's it for <code>RenderAssets</code> basically. What a ride... and we still have <code>Material2d</code> left in front of use. But stay with me, it pays off. So let's go baby, <code>Material2d</code> here we come:</p>
+<p>The <code>Material2d</code> trait contains three functions we're intrested in and they are not too complex.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Material2d </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bind_group</span><span>(</span><span style="color:#bf616a;">material</span><span>: &amp;&lt;</span><span style="color:#b48ead;">Self </span><span>as RenderAsset&gt;::PreparedAsset) -&gt; &amp;BindGroup {
+</span><span>        &amp;material.bind_group
+</span><span>    }
+</span><span>
+</span><span>}
+</span></code></pre>
+<p>The first function, <code>bind_group</code>, basically just returns a <code>BindGroup</code> which is used by the GPU. We are lucky, since we store that information in our <code>GPUMonaLisaMaterial</code> which is the same as <code>&lt;Self as RenderAsset&gt;::PreparedAsset</code>, so we can just return a reference to it's field. Let's continue:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Material2d </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bind_group</span><span>(</span><span style="color:#bf616a;">material</span><span>: &amp;&lt;</span><span style="color:#b48ead;">Self </span><span>as RenderAsset&gt;::PreparedAsset) -&gt; &amp;BindGroup {
+</span><span>        &amp;material.bind_group
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bind_group_layout</span><span>(                                                               </span><span style="color:#65737e;">// |&lt;- new
+</span><span>        </span><span style="color:#bf616a;">render_device</span><span>: &amp;RenderDevice,                                                   </span><span style="color:#65737e;">// |
+</span><span>    ) -&gt; bevy::render::render_resource::BindGroupLayout {                               </span><span style="color:#65737e;">// |
+</span><span>        render_device.</span><span style="color:#96b5b4;">create_bind_group_layout</span><span>(&amp;BindGroupLayoutDescriptor {             </span><span style="color:#65737e;">// |
+</span><span>            label: None,                                                                </span><span style="color:#65737e;">// |
+</span><span>            entries: &amp;[                                                                 </span><span style="color:#65737e;">// |
+</span><span>                BindGroupLayoutEntry {                                                  </span><span style="color:#65737e;">// |
+</span><span>                    binding: </span><span style="color:#d08770;">0</span><span>,                                                         </span><span style="color:#65737e;">// |
+</span><span>                    visibility: ShaderStages::</span><span style="color:#d08770;">FRAGMENT</span><span>,                                 </span><span style="color:#65737e;">// |
+</span><span>                    ty: BindingType::Texture {                                          </span><span style="color:#65737e;">// |
+</span><span>                        sample_type: TextureSampleType::Float { filterable: </span><span style="color:#d08770;">true </span><span>},     </span><span style="color:#65737e;">// |
+</span><span>                        view_dimension: TextureViewDimension::</span><span style="color:#d08770;">D2</span><span>,                       </span><span style="color:#65737e;">// |
+</span><span>                        multisampled: </span><span style="color:#d08770;">false</span><span>,                                            </span><span style="color:#65737e;">// |       
+</span><span>                    },                                                                  </span><span style="color:#65737e;">// |       
+</span><span>                    count: None,                                                        </span><span style="color:#65737e;">// |                   
+</span><span>                },                                                                      </span><span style="color:#65737e;">// |   
+</span><span>                BindGroupLayoutEntry {                                                  </span><span style="color:#65737e;">// |                       
+</span><span>                    binding: </span><span style="color:#d08770;">1</span><span>,                                                         </span><span style="color:#65737e;">// |               
+</span><span>                    visibility: ShaderStages::</span><span style="color:#d08770;">FRAGMENT</span><span>,                                 </span><span style="color:#65737e;">// |                                       
+</span><span>                    ty: BindingType::Sampler(SamplerBindingType::Filtering),            </span><span style="color:#65737e;">// |                                                               
+</span><span>                    count: None,                                                        </span><span style="color:#65737e;">// |                   
+</span><span>                },                                                                      </span><span style="color:#65737e;">// |   
+</span><span>            ],                                                                          </span><span style="color:#65737e;">// |
+</span><span>        })                                                                              </span><span style="color:#65737e;">// |
+</span><span>    }                                                                                   </span><span style="color:#65737e;">// |&lt;- new
+</span><span>
+</span><span>}
+</span></code></pre>
+<p>The function <code>bind_group_layout</code> just creates the layout for the data in the bind group which we returned in the <code>prepare_asset</code> function. If you want to find out more about all the details of <code>BindGroups</code> I recommend the <a href="https://docs.rs/bevy/0.7.0/bevy/index.html">docs of bevy</a> as well as the <a href="https://wgpu.rs/doc/wgpu/index.html">docs of wgpu</a>. Let's implement the last function:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Material2d </span><span style="color:#b48ead;">for </span><span>MonaLisaMaterial {
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bind_group</span><span>(</span><span style="color:#bf616a;">material</span><span>: &amp;&lt;</span><span style="color:#b48ead;">Self </span><span>as RenderAsset&gt;::PreparedAsset) -&gt; &amp;BindGroup {
+</span><span>        &amp;material.bind_group
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bind_group_layout</span><span>(                                                               
+</span><span>        </span><span style="color:#bf616a;">render_device</span><span>: &amp;RenderDevice,                                                   
+</span><span>    ) -&gt; bevy::render::render_resource::BindGroupLayout {                               
+</span><span>        render_device.</span><span style="color:#96b5b4;">create_bind_group_layout</span><span>(&amp;BindGroupLayoutDescriptor {             
+</span><span>            label: None,                                                                
+</span><span>            entries: &amp;[                                                                 
+</span><span>                BindGroupLayoutEntry {                                                  
+</span><span>                    binding: </span><span style="color:#d08770;">0</span><span>,                                                         
+</span><span>                    visibility: ShaderStages::</span><span style="color:#d08770;">FRAGMENT</span><span>,                                 
+</span><span>                    ty: BindingType::Texture {                                          
+</span><span>                        sample_type: TextureSampleType::Float { filterable: </span><span style="color:#d08770;">true </span><span>},     
+</span><span>                        view_dimension: TextureViewDimension::</span><span style="color:#d08770;">D2</span><span>,                       
+</span><span>                        multisampled: </span><span style="color:#d08770;">false</span><span>,                                             
+</span><span>                    },                                                                   
+</span><span>                    count: None,                                                                     
+</span><span>                },                                                                      
+</span><span>                BindGroupLayoutEntry {                                                                   
+</span><span>                    binding: </span><span style="color:#d08770;">1</span><span>,                                                                  
+</span><span>                    visibility: ShaderStages::</span><span style="color:#d08770;">FRAGMENT</span><span>,                                                                  
+</span><span>                    ty: BindingType::Sampler(SamplerBindingType::Filtering),                                                                     
+</span><span>                    count: None,                                                                     
+</span><span>                },                                                                      
+</span><span>            ],                                                                          
+</span><span>        })                                                                              
+</span><span>    }                                                                                   
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">fragment_shader</span><span>(</span><span style="color:#bf616a;">asset_server</span><span>: &amp;AssetServer) -&gt; Option&lt;Handle&lt;Shader&gt;&gt; {      </span><span style="color:#65737e;">// |&lt;- new
+</span><span>        asset_server.</span><span style="color:#96b5b4;">watch_for_changes</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>();                                  </span><span style="color:#65737e;">// |
+</span><span>        Some(asset_server.</span><span style="color:#96b5b4;">load</span><span>(&quot;</span><span style="color:#a3be8c;">masterpiece_shader.wgsl</span><span>&quot;))                          </span><span style="color:#65737e;">// |
+</span><span>    }                                                                               </span><span style="color:#65737e;">// |&lt;- new
+</span><span>}
+</span></code></pre>
+<p>This is where we finally load our (not yet existing) shader and use it for the <code>MonaLisaMaterial</code>. Note that we also enabled hot-reloading in the with the <code>.watch_for_changes()</code> part. And that's almost it. Now that we have the material, we just need to spawn an object and apply the material to it and we are done with this part of the tutorial.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">spawn_quad</span><span>(
+</span><span>    </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">commands</span><span>: Commands,
+</span><span>    </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">mesh_assets</span><span>: ResMut&lt;Assets&lt;Mesh&gt;&gt;,
+</span><span>    </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">my_material2d_assets</span><span>: ResMut&lt;Assets&lt;MonaLisaMaterial&gt;&gt;,
+</span><span>    </span><span style="color:#bf616a;">image</span><span>: Res&lt;TheMonaLisaHerself&gt;,
+</span><span>) {
+</span><span>    commands.</span><span style="color:#96b5b4;">spawn_bundle</span><span>(MaterialMesh2dBundle {
+</span><span>        mesh: mesh_assets.</span><span style="color:#96b5b4;">add</span><span>(Mesh::from(shape::Quad::default())).</span><span style="color:#96b5b4;">into</span><span>(),
+</span><span>        material: my_material2d_assets.</span><span style="color:#96b5b4;">add</span><span>(MonaLisaMaterial { image: image.</span><span style="color:#96b5b4;">clone</span><span>() }),
+</span><span>        ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>    });
+</span><span>}
+</span></code></pre>
+<p>I chose to &quot;just&quot; spawn a rectangle ▯ but you can basically choose whatever you want here. The world is your oister! Now plug that into your bevy app together with the <code>Material2dPlugin</code> for our <code>MonaLisaMaterial</code> and you can almost run it.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    App::new()
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(WindowDescriptor {
+</span><span>            title: &quot;</span><span style="color:#a3be8c;">BEVY SHADER TEST</span><span>&quot;.</span><span style="color:#96b5b4;">to_string</span><span>(),
+</span><span>            width: </span><span style="color:#d08770;">HEIGHT </span><span>* </span><span style="color:#d08770;">RESOLUTION</span><span>,
+</span><span>            height: </span><span style="color:#d08770;">HEIGHT</span><span>,
+</span><span>            present_mode: PresentMode::Mailbox,
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        })
+</span><span>        .</span><span style="color:#96b5b4;">insert_resource</span><span>(WinitSettings {
+</span><span>            focused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            unfocused_mode: UpdateMode::ReactiveLowPower {
+</span><span>                max_wait: Duration::from_millis(</span><span style="color:#d08770;">50</span><span>),
+</span><span>            },
+</span><span>            ..</span><span style="color:#96b5b4;">default</span><span>()
+</span><span>        })
+</span><span>        .</span><span style="color:#96b5b4;">add_plugins</span><span>(DefaultPlugins)
+</span><span>        .</span><span style="color:#96b5b4;">add_plugin</span><span>(Material2dPlugin::&lt;MonaLisaMaterial&gt;::default())    </span><span style="color:#65737e;">// &lt;- new
+</span><span>        .</span><span style="color:#96b5b4;">add_startup_system_to_stage</span><span>(StartupStage::PreStartup, setup)
+</span><span>        .</span><span style="color:#96b5b4;">add_startup_system</span><span>(spawn_quad)                                 </span><span style="color:#65737e;">// &lt;- new
+</span><span>        .</span><span style="color:#96b5b4;">run</span><span>();
+</span><span>}
+</span></code></pre>
+<p>&quot;Why almost?&quot;, you ask. Because we need to provide the <code>mona_lisa.png</code> and the <code>masterpiece_shader.wgsl</code> in the <code>./assets/</code> directory. You can obviously use whatever image you want to use and for the default shader, use this here:</p>
+<pre data-lang="wgsl" style="background-color:#2b303b;color:#c0c5ce;" class="language-wgsl "><code class="language-wgsl" data-lang="wgsl"><span>struct VertexOutput {                                   // |&lt;- ignore this for now
+</span><span>    [[builtin(position)]] clip_position: vec4&lt;f32&gt;;     // |
+</span><span>    [[location(0)]] world_position: vec4&lt;f32&gt;;          // |
+</span><span>    [[location(1)]] world_normal: vec3&lt;f32&gt;;            // |
+</span><span>    [[location(2)]] uv: vec2&lt;f32&gt;;                      // |
+</span><span>};                                                      // |
+</span><span>                                                        // |
+</span><span>[[group(1), binding(0)]]                                // |
+</span><span>var texture: texture_2d&lt;f32&gt;;                           // |
+</span><span>[[group(1), binding(1)]]                                // |
+</span><span>var out_sampler: sampler;                               // |&lt;- ignore this for now
+</span><span>
+</span><span>[[stage(fragment)]]
+</span><span>fn fragment(input: VertexOutput) -&gt; [[location(0)]] vec4&lt;f32&gt; {
+</span><span>    let rgba : vec4&lt;f32&gt; = textureSample(texture, out_sampler, input.uv);
+</span><span>    return rgba;
+</span><span>}
+</span></code></pre>
+<p>This basically just samples the image we load and displays it as is on the rectangle. You should now see something like this:</p>
+<p><img src="../../../halftoneshader/mona_lisa.png" alt="Screenshot Boilerplate" /></p>
+<p>Well 😳, ... erm ... I guess see you in the <a href="../halftoneshaderp3">next part</a></p>
+
+
+        
+    
+
+        
+        
+    </article></div>
+    <div class="pagination">
+        <div class="pagination__buttons">
+            </div>
+    </div>
+<footer class="footer">
+                    <div class="footer__inner"><div class="copyright">
+            <span>© 2022 <a href="https://github.com/ejmg/zerm">zerm</a> :: Powered by <a href="https://www.getzola.org/">Zola</a></span>
+            <span>:: Theme made by <a href="https://github.com/ejmg">ejmg</a></span>
+        </div>
+    <script type="text/javascript" src="https://robwalt.dev/assets/js/main.js"></script>
+</div>
+                    
+
+                </footer></div>
+    </body>
+</html>

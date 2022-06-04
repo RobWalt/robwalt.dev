@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>Half Tone Shader - Part 1 - Rob Walter</title>
+    
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"><meta name="description" content=" Half Tone Shader - Part 1 "/><meta name="keywords" content="rust, graphics, shader, bevy, wgsl" />
+    <meta property="og:title" content=" -&nbsp;Half Tone Shader - Part 1" />
+    <meta property="og:type" content="website"/><meta property="og:url" content="https:&#x2F;&#x2F;robwalt.dev&#x2F;posts&#x2F;various&#x2F;halftoneshaderp1&#x2F;"/><meta property="og:description" content=""/>
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://robwalt.dev/style.css?h=2c8d17b7aa9535c98dc3b725d1bc9c6b2e12b81df07df95e5d9af6dcb88e7c78">
+    <link rel="stylesheet" href=" https://robwalt.dev/color/orange.css?h=aee32970acd19d5cf88d42505796de4e31aa73fc58a07e61aa2f57fae305de50">
+    
+</head>
+    <body>
+        <div class="container center">
+<header class="header">
+    <div class="header__inner">
+        <div class="header__logo">
+            <a href="https:&#x2F;&#x2F;robwalt.dev">
+    <div class="logo">
+        robWalt.dev
+    </div>
+</a>
+        </div>
+        <div class="menu-trigger">menu</div>
+    </div>
+    
+    <nav class="menu">
+        <ul class="menu__inner menu__inner--desktop">
+            
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li></ul>
+
+        <ul class="menu__inner menu__inner--mobile">
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li>
+        </ul>
+    </nav>
+
+    </header>
+<div class="content"><article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https:&#x2F;&#x2F;robwalt.dev&#x2F;posts&#x2F;various&#x2F;halftoneshaderp1&#x2F;">Half Tone Shader - Part 1</a>
+            </h1>
+            
+    <div class="post-meta">
+        <span class="post-date">2022.05.24
+                </span>
+
+        <span class="post-author">
+    ::
+    Rob Walter</span>
+
+        
+
+    
+    ::
+    #<a href="https://robwalt.dev/tags/rust/">rust</a>
+        
+    #<a href="https://robwalt.dev/tags/graphics/">graphics</a>
+        
+    #<a href="https://robwalt.dev/tags/shader/">shader</a>
+        
+    #<a href="https://robwalt.dev/tags/bevy/">bevy</a>
+        
+    #<a href="https://robwalt.dev/tags/wgsl/">wgsl</a>
+        
+    
+            
+        
+    </div>
+
+            
+    
+</header><h1 id="motivation">Motivation</h1>
+<p>The other day I was scrolling through twitter when stumbling upon this gem of a post:</p>
+<hr />
+<br/>
+<div align="center">
+<blockquote class="twitter-tweet">
+<p lang="und" dir="ltr">
+<a href="https://t.co/cX3qavF6Qp">pic.twitter.com/cX3qavF6Qp</a>
+</p>
+&mdash; Franek
+(@Franrekk) 
+<a href="https://twitter.com/Franrekk/status/1527676092768997376?ref_src=twsrc%5Etfw">
+May 20, 2022
+</a>
+</blockquote> 
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<br/>
+<hr />
+<p>One of my favorite pixel artists posted a pretty cool piece of art. The
+interesting part about it is, that it is rendered using a shader called the
+&quot;half-tone shader&quot;.</p>
+<p>Since I recently read the famous</p>
+<p><a href="https://thebookofshaders.com/">Book of Shaders</a> (which was a very plesant experience btw),</p>
+<p>I wanted to have some fun with shaders myself and so the goal of implementing
+this shader was born. To make things even more interesting I chose to implement
+it in <a href="https://gpuweb.github.io/gpuweb/wgsl/">WGSL</a>, a shading language for the
+web, primarily because I can use it in any of my
+<a href="https://bevyengine.org/">Bevy</a> projects but also because I might reuse it some
+day for some web base projects.</p>
+<p>This little series will cover the following topics:</p>
+<ol>
+<li>Minimum setup of bevy to enable working on shaders </li>
+<li>A little bit of theory about the half-tone shader and colors </li>
+<li>The implementation of the shader</li>
+</ol>
+<p><a href="../halftoneshaderp2">Go to part 2</a></p>
+
+
+        
+    
+
+        
+        
+    </article></div>
+    <div class="pagination">
+        <div class="pagination__buttons">
+            </div>
+    </div>
+<footer class="footer">
+                    <div class="footer__inner"><div class="copyright">
+            <span>© 2022 <a href="https://github.com/ejmg/zerm">zerm</a> :: Powered by <a href="https://www.getzola.org/">Zola</a></span>
+            <span>:: Theme made by <a href="https://github.com/ejmg">ejmg</a></span>
+        </div>
+    <script type="text/javascript" src="https://robwalt.dev/assets/js/main.js"></script>
+</div>
+                    
+
+                </footer></div>
+    </body>
+</html>

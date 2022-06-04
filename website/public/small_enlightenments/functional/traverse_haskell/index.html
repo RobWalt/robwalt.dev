@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>The day I finally understood &quot;Traversable&quot; - Rob Walter</title>
+    
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"><meta name="description" content=" The day I finally understood &quot;Traversable&quot; "/><meta name="keywords" content="functional programming, haskell, traverse, traversable" />
+    <meta property="og:title" content=" -&nbsp;The day I finally understood &quot;Traversable&quot;" />
+    <meta property="og:type" content="website"/><meta property="og:url" content="https:&#x2F;&#x2F;robwalt.dev&#x2F;small_enlightenments&#x2F;functional&#x2F;traverse_haskell&#x2F;"/><meta property="og:description" content=""/>
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://robwalt.dev/style.css?h=2c8d17b7aa9535c98dc3b725d1bc9c6b2e12b81df07df95e5d9af6dcb88e7c78">
+    <link rel="stylesheet" href=" https://robwalt.dev/color/orange.css?h=aee32970acd19d5cf88d42505796de4e31aa73fc58a07e61aa2f57fae305de50">
+    
+</head>
+    <body>
+        <div class="container center">
+<header class="header">
+    <div class="header__inner">
+        <div class="header__logo">
+            <a href="https:&#x2F;&#x2F;robwalt.dev">
+    <div class="logo">
+        robWalt.dev
+    </div>
+</a>
+        </div>
+        <div class="menu-trigger">menu</div>
+    </div>
+    
+    <nav class="menu">
+        <ul class="menu__inner menu__inner--desktop">
+            
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li></ul>
+
+        <ul class="menu__inner menu__inner--mobile">
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li>
+        </ul>
+    </nav>
+
+    </header>
+<div class="content"><article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https:&#x2F;&#x2F;robwalt.dev&#x2F;small_enlightenments&#x2F;functional&#x2F;traverse_haskell&#x2F;">The day I finally understood &quot;Traversable&quot;</a>
+            </h1>
+            
+    <div class="post-meta">
+        <span class="post-date">2022.06.02
+                </span>
+
+        <span class="post-author">
+    ::
+    Rob Walter</span>
+
+        
+
+    
+    ::
+    #<a href="https://robwalt.dev/tags/functional-programming/">functional programming</a>
+        
+    #<a href="https://robwalt.dev/tags/haskell/">haskell</a>
+        
+    #<a href="https://robwalt.dev/tags/traverse/">traverse</a>
+        
+    #<a href="https://robwalt.dev/tags/traversable/">traversable</a>
+        
+    
+            
+        
+    </div>
+
+            
+    
+</header><p>While reading through <a href="https://haskellbook.com/">my haskell programming book</a> I
+loved learning all these new concepts from functional programming which were so
+elegant in haskell. However, some of the stuff described in the later chapters
+was still inaccessible to me because of lacking experience with haskell syntax
+in real world problems. One such thing was the <code>Traversable</code> typeclass. The
+type signature looked pretty weird to me, I didn't get it at the time and just
+skipped it in the hope that I would one day in the future maybe understand it
+when finishing the rest of the book. Well, spoiler alert ... I didn't learn
+something from skipping a part of a book. However, as of today I'm at least a
+step closer to understanding <code>Traversable</code> and I can at least name 1 (one!)
+usecase. Let's dive into the topic.</p>
+<p>So recently I'm trying to solve a short coding excercise in haskell each day to
+sweep the dust of the haskell parts of my brain. As my fate wanted it, today I
+was solving the <a href="https://exercism.org/tracks/haskell/exercises/rna-transcription">task of RNA Transcription on
+exercism</a>
+which has a really nice solution when using the methods of <code>Traversable</code>. Of
+course, I didn't know that before solving the task and only got to know it from
+looking at other peoples code. You can even take a look at <a href="https://exercism.org/tracks/haskell/exercises/rna-transcription/solutions/aviac">my crappy solution
+here</a>.</p>
+<p>The task is basically just &quot;transcribe this strand of DNA to RNA&quot; which can of
+course fail if we get some corrupt input data like</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">inputData </span><span style="color:#b48ead;">:: String 
+</span><span>inputData = &quot;</span><span style="color:#a3be8c;">GTAZZZCGAC</span><span>&quot;
+</span></code></pre>
+<p>Since <code>Z</code> is not a transcribable DNA base, we want to return the first
+erroneous base indicating that an error happened. This gives our RNA
+Transcription Program an overall type signature of</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">transcribeRna </span><span style="color:#b48ead;">:: String -&gt; Either Char String
+</span></code></pre>
+<p>On of the first reflexes here is for us to factor out the transcription of
+individual chars and then somehow life this behaviour over the whole DNA
+strand. Doing this is not to difficult and we end up with something like this:</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">transcribeBase </span><span style="color:#b48ead;">:: Char -&gt; Either Char Char
+</span><span>transcribeBase base = </span><span style="color:#b48ead;">case</span><span> base </span><span style="color:#b48ead;">of 
+</span><span>    &#39;</span><span style="color:#a3be8c;">G</span><span>&#39; -&gt; </span><span style="color:#d08770;">Right </span><span>&#39;</span><span style="color:#a3be8c;">C</span><span>&#39;
+</span><span>    &#39;</span><span style="color:#a3be8c;">C</span><span>&#39; -&gt; </span><span style="color:#d08770;">Right </span><span>&#39;</span><span style="color:#a3be8c;">G</span><span>&#39;
+</span><span>    &#39;</span><span style="color:#a3be8c;">T</span><span>&#39; -&gt; </span><span style="color:#d08770;">Right </span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;
+</span><span>    &#39;</span><span style="color:#a3be8c;">A</span><span>&#39; -&gt; </span><span style="color:#d08770;">Right </span><span>&#39;</span><span style="color:#a3be8c;">U</span><span>&#39;
+</span><span>    _ -&gt; </span><span style="color:#d08770;">Left</span><span> base
+</span></code></pre>
+<p>Here <code>Right</code> translates to success and <code>Left</code> translates to failure. Ok, fine.
+Now we have a perfect base transcribing function. Let's map it over the DNA
+strand</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">transcribedStrand </span><span style="color:#b48ead;">::</span><span> ???
+</span><span>transcribedStrand = map transcribeBase inputData
+</span></code></pre>
+<p>Now what is the type of the output of this? Let's look at the types:</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">inputData </span><span style="color:#b48ead;">:: String 
+</span><span style="color:#8fa1b3;">transcribeBase </span><span style="color:#b48ead;">:: Char -&gt; Either Char Char
+</span><span>
+</span><span style="color:#8fa1b3;">transcribedStrand </span><span style="color:#b48ead;">::</span><span> [</span><span style="color:#b48ead;">Either Char Char</span><span>]
+</span><span>transcribedStrand = map transcribeBase inputData
+</span><span>
+</span><span style="color:#8fa1b3;">transcribeRna </span><span style="color:#b48ead;">:: String -&gt; Either Char String </span><span style="color:#65737e;">-- this is what we want
+</span></code></pre>
+<p>Well that doesn't really look like what we want 😞!
+...
+hmmm
+...
+But wait, let's look closer: We have two layers of functors here</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>[</span><span style="color:#d08770;">Either Char Char</span><span>]
+</span><span>
+</span><span style="color:#d08770;">F</span><span> ( </span><span style="color:#d08770;">G</span><span> ( </span><span style="color:#d08770;">Char</span><span> ) )
+</span><span>
+</span><span style="color:#b48ead;">where
+</span><span>
+</span><span style="color:#d08770;">F </span><span>= [  ] 
+</span><span style="color:#d08770;">G </span><span>= </span><span style="color:#d08770;">Either Char
+</span></code></pre>
+<p>Let's take a look at the output type of the program:</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#d08770;">Either Char String
+</span></code></pre>
+<p>...
+hmmm
+...
+But wait!! Isn't <code>String</code> just the same as <code>[Char]</code>. So there are also two layers of functors</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#d08770;">Either Char String </span><span>== </span><span style="color:#d08770;">Either Char</span><span> [</span><span style="color:#d08770;">Char</span><span>]
+</span><span>
+</span><span style="color:#d08770;">G</span><span> ( </span><span style="color:#d08770;">F</span><span> ( </span><span style="color:#d08770;">Char</span><span> ) )
+</span><span>
+</span><span style="color:#b48ead;">where
+</span><span style="color:#d08770;">F </span><span>= [  ] 
+</span><span style="color:#d08770;">G </span><span>= </span><span style="color:#d08770;">Either Char
+</span></code></pre>
+<p>So we basically just need to swap the functors and we're done. I wonder if
+there is a function in the prelude that can solve this 🤔. But there is! Its
+<code>sequenceA</code>. So after applying <code>sequenceA</code> to our results from above, we end up
+with the types aligned, so let's try it out</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">transcribedStrand </span><span style="color:#b48ead;">:: Either Char String
+</span><span>transcribedStrand = sequenceA . map transcribeBase inputData
+</span><span>
+</span><span style="color:#8fa1b3;">transcribeRna </span><span style="color:#b48ead;">:: String -&gt; Either Char String </span><span style="color:#65737e;">-- this is matches perfectly
+</span></code></pre>
+<p>It works!! But we can improve this by a little bit still. If we look in <a href="https://en.m.wikibooks.org/wiki/Haskell/Traversable">the
+definition of the Traversable
+trait</a>, we can find out
+that there exists a handy function <code>traverse</code> with</p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span>travers = sequenceA . map
+</span></code></pre>
+<p>So we can even just write </p>
+<pre data-lang="hs" style="background-color:#2b303b;color:#c0c5ce;" class="language-hs "><code class="language-hs" data-lang="hs"><span style="color:#8fa1b3;">oldTranscribedStrand </span><span style="color:#b48ead;">:: Either Char String
+</span><span>oldTranscribedStrand = sequenceA . map transcribeBase inputData
+</span><span>
+</span><span style="color:#8fa1b3;">newTranscribedStrand </span><span style="color:#b48ead;">:: Either Char String
+</span><span>newTranscribedStrand = traverse transcribeBase inputData
+</span></code></pre>
+<p>Wow 😎, that was awesome! Now let's just summarize what happened here from a high-level viewpoint:</p>
+<p>We could make use of the <code>Traversable</code> trait in a situation where we wanted to
+transform a &quot;list of results&quot; to a &quot;result of list&quot; which should come in quiet
+handy in various real world applications. From now, whenever we notice that
+kind of pattern, we can utilize the very cool functions from <code>Traversable</code>.</p>
+
+
+        
+    
+
+        
+        
+    </article></div>
+    <div class="pagination">
+        <div class="pagination__buttons">
+            </div>
+    </div>
+<footer class="footer">
+                    <div class="footer__inner"><div class="copyright">
+            <span>© 2022 <a href="https://github.com/ejmg/zerm">zerm</a> :: Powered by <a href="https://www.getzola.org/">Zola</a></span>
+            <span>:: Theme made by <a href="https://github.com/ejmg">ejmg</a></span>
+        </div>
+    <script type="text/javascript" src="https://robwalt.dev/assets/js/main.js"></script>
+</div>
+                    
+
+                </footer></div>
+    </body>
+</html>

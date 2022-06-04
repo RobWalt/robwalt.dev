@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>Traversable in Rust - Rob Walter</title>
+    
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"><meta name="description" content=" Traversable in Rust "/><meta name="keywords" content="functional programming, rust, traverse, traversable" />
+    <meta property="og:title" content=" -&nbsp;Traversable in Rust" />
+    <meta property="og:type" content="website"/><meta property="og:url" content="https:&#x2F;&#x2F;robwalt.dev&#x2F;small_enlightenments&#x2F;functional&#x2F;traverse_rust&#x2F;"/><meta property="og:description" content=""/>
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="https://robwalt.dev/assets/fonts/FiraCode-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://robwalt.dev/style.css?h=2c8d17b7aa9535c98dc3b725d1bc9c6b2e12b81df07df95e5d9af6dcb88e7c78">
+    <link rel="stylesheet" href=" https://robwalt.dev/color/orange.css?h=aee32970acd19d5cf88d42505796de4e31aa73fc58a07e61aa2f57fae305de50">
+    
+</head>
+    <body>
+        <div class="container center">
+<header class="header">
+    <div class="header__inner">
+        <div class="header__logo">
+            <a href="https:&#x2F;&#x2F;robwalt.dev">
+    <div class="logo">
+        robWalt.dev
+    </div>
+</a>
+        </div>
+        <div class="menu-trigger">menu</div>
+    </div>
+    
+    <nav class="menu">
+        <ul class="menu__inner menu__inner--desktop">
+            
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li></ul>
+
+        <ul class="menu__inner menu__inner--mobile">
+            
+        <li>
+            <a href="
+    
+        https://robwalt.dev/small_enlightenments
+    
+">Small Enlightenments</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/posts
+    
+">Posts</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/books
+    
+">Books</a>
+        </li>
+        <li>
+            <a href="
+    
+        https://robwalt.dev/about
+    
+">About</a>
+        </li>
+        </ul>
+    </nav>
+
+    </header>
+<div class="content"><article class="post">
+        <header>
+            <h1 class="post-title">
+                <a href="https:&#x2F;&#x2F;robwalt.dev&#x2F;small_enlightenments&#x2F;functional&#x2F;traverse_rust&#x2F;">Traversable in Rust</a>
+            </h1>
+            
+    <div class="post-meta">
+        <span class="post-date">2022.06.04
+                </span>
+
+        <span class="post-author">
+    ::
+    Rob Walter</span>
+
+        
+
+    
+    ::
+    #<a href="https://robwalt.dev/tags/functional-programming/">functional programming</a>
+        
+    #<a href="https://robwalt.dev/tags/rust/">rust</a>
+        
+    #<a href="https://robwalt.dev/tags/traverse/">traverse</a>
+        
+    #<a href="https://robwalt.dev/tags/traversable/">traversable</a>
+        
+    
+            
+        
+    </div>
+
+            
+    
+</header><p>A few days ago <a href="../traverse_haskell">my understanding of &quot;Traversable&quot;
+improved</a>. Today I just want to reflect on that post and
+take a look at how the example works in Rust.</p>
+<p>The basic problem was, that we wanted to translate some DNA to RNA, but the
+translation could fail at any point if we encountered an invalid base (a base
+that's not G,C,A,T). So here is the basic setup with the heart-piece missing:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">translate_base</span><span>(</span><span style="color:#bf616a;">base</span><span>: </span><span style="color:#b48ead;">char</span><span>) -&gt; Result&lt;</span><span style="color:#b48ead;">char</span><span>, </span><span style="color:#b48ead;">char</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">match</span><span> base {
+</span><span>        &#39;</span><span style="color:#a3be8c;">G</span><span>&#39; =&gt; Ok(&#39;</span><span style="color:#a3be8c;">C</span><span>&#39;),
+</span><span>        &#39;</span><span style="color:#a3be8c;">C</span><span>&#39; =&gt; Ok(&#39;</span><span style="color:#a3be8c;">G</span><span>&#39;),
+</span><span>        &#39;</span><span style="color:#a3be8c;">A</span><span>&#39; =&gt; Ok(&#39;</span><span style="color:#a3be8c;">U</span><span>&#39;),
+</span><span>        &#39;</span><span style="color:#a3be8c;">T</span><span>&#39; =&gt; Ok(&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;),
+</span><span>        _ =&gt; Err(base),
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">translate_dna</span><span>(</span><span style="color:#bf616a;">dna_strand</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) -&gt; Result&lt;String, </span><span style="color:#b48ead;">char</span><span>&gt; {
+</span><span>    </span><span style="color:#65737e;">// ???
+</span><span>    unimplemented!()
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dna = String::from(&quot;</span><span style="color:#a3be8c;">GCTAGZZZGACT</span><span>&quot;);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> rna = </span><span style="color:#96b5b4;">translate_dna</span><span>(&amp;dna);
+</span><span>}
+</span></code></pre>
+<p>So how do we implement the missing piece? Well, even though the rust standard library doesn't actually give use something called &quot;traverse&quot; or &quot;sequence&quot;, it's quiet simple:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">translate_dna</span><span>(</span><span style="color:#bf616a;">dna_strand</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) -&gt; Result&lt;String, </span><span style="color:#b48ead;">char</span><span>&gt; {
+</span><span>    dna_strand
+</span><span>        .</span><span style="color:#96b5b4;">chars</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">map</span><span>(translate_base)
+</span><span>        .collect::&lt;Result&lt;String, </span><span style="color:#b48ead;">char</span><span>&gt;&gt;()
+</span><span>}
+</span></code></pre>
+<p>So &quot;Traversable&quot; was hidden in the standard library for the <code>std::result::Result</code> type all along 🤯. With a bit of naming we actually get (specifically for the <code>std::result::Result</code> type)</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// .collect::&lt;Result&lt;T, E&gt;&gt;() =~= sequenceA
+</span><span>
+</span><span style="color:#65737e;">// .map(f).collect::&lt;Result&lt;T, E&gt;&gt;() == traverse
+</span></code></pre>
+<p>which is pretty neat.</p>
+
+
+        
+    
+
+        
+        
+    </article></div>
+    <div class="pagination">
+        <div class="pagination__buttons">
+            </div>
+    </div>
+<footer class="footer">
+                    <div class="footer__inner"><div class="copyright">
+            <span>© 2022 <a href="https://github.com/ejmg/zerm">zerm</a> :: Powered by <a href="https://www.getzola.org/">Zola</a></span>
+            <span>:: Theme made by <a href="https://github.com/ejmg">ejmg</a></span>
+        </div>
+    <script type="text/javascript" src="https://robwalt.dev/assets/js/main.js"></script>
+</div>
+                    
+
+                </footer></div>
+    </body>
+</html>
