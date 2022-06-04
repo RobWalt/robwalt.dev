@@ -7,4 +7,4 @@ template = "page.html"
 
 Hi, I'm Robert and this is my website!
 
-You can follow me on twitter [@RSW_offcl](https://twitter.com/RSW_offcl) if you want.
+You can follow me on twitter [@RSW_offcl](https://twitter.com/RSW_offcl).
