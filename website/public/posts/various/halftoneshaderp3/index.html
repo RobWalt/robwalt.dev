@@ -117,7 +117,75 @@
 
             
     
-</header><p>Hi this part hasn't been written yet unfortunately 🥲 </p>
+</header><p><a href="../halftoneshaderp2">Go to part 2</a></p>
+<h1 id="half-tone-shader-color-theory">Half Tone Shader - Color Theory</h1>
+<p>In the following, we will take a short adventure into color-theory-land ⛰️🖌️ It
+will be a really short post, so sit back and relax as we look at some paint on
+the screen.</p>
+<h2 id="rgba-colors">RGBA Colors</h2>
+<p>Quiet often in computer related fields, we're encountering colors as a 3D or 4D
+vector (depending if you use opacity). The entries of the vector normally are
+related to the RGB(A) values of the color, where</p>
+<ul>
+<li>R stands for <span style="color: rgba(255, 0, 0, 1.0)">red</span></li>
+<li>G stands for <span style="color: rgba(0, 255, 0, 1.0)">green</span></li>
+<li>B stands for <span style="color: rgba(0, 0, 255, 1.0)">blue</span></li>
+<li>A stands for <span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">alpha</span></li>
+</ul>
+<p>Well, ... actually ... let me
+<span style="background: linear-gradient(to right, rgba(255, 0, 0, 1.0), rgba(0, 255, 0, 1.0), rgba(0, 255, 255, 1.0));-webkit-background-clip: text;-webkit-text-fill-color: transparent;"> show you the colors everywhere I can from now on.</span></p>
+<h2 id="color-representation">Color Representation</h2>
+<p>There are different ways to represent colors on computers. The two main formats are:</p>
+<ul>
+<li>vector of integers (values from <code>0 - 255</code>)</li>
+<li>vector of floats (values from <code>0.0 - 1.0</code>)</li>
+</ul>
+<p>We are going to use the float representation here and throughout the rest of
+the project. </p>
+<h2 id="cymk-colors">CYMK Colors</h2>
+<p>The original Half Tone shader I mentioned in <a href="../halftoneshaderp1">part
+1</a> uses another color scheme called to CYMK color scheme
+opposed to the <span style="color: rgba(255, 0, 0, 1.0)">R</span><span
+style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255,
+1.0)">B</span><span style="background: linear-gradient(to right, rgba(255, 255,
+255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip:
+text;-webkit-text-fill-color: transparent;">A</span> . Since we're at least as
+talented as the person who wrote the
+shader from the post (not actually, but let's at least pretend), we're going to
+use this other color scheme aswell.</p>
+<p>CYMK is an acronym for the colors used just as <span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span><span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">A</span> and here are the colors:</p>
+<ul>
+<li>C stands for <span style="color: rgba(0, 255, 255, 1.0)">cyan</span></li>
+<li>Y stands for <span style="color: rgba(255, 0, 255, 1.0)">yellow</span></li>
+<li>M stands for <span style="color: rgba(255, 255, 0, 1.0)">magenta</span></li>
+<li>K stands for <span style="color: rgba(150, 150, 150, 1.0)">key</span> (&lt;- &quot;key&quot; ... <em>*psss* ... it's just black</em>)</li>
+</ul>
+<p>Unfortunately, we can't use these colors natively in our shaders, since the colors will be given in <span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span><span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">A</span> format. This leaves us with the question of how we transform 
+<span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span><span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">A</span> 
+colors to 
+<span style="color: rgba(0, 255, 255, 1.0)">C</span><span style="color: rgba(255, 0, 255, 1.0)">Y</span><span style="color: rgba(255, 255, 0, 1.0)">M</span><span style="color: rgba(150, 150, 150, 1.0)">K</span> colors.</p>
+<h2 id="rgba-to-cymk">RGBA to CYMK</h2>
+<p>What we get from our picture is a
+<span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span><span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">A</span> 
+color, but the 
+<span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">alpha</span>
+part is basically always just going to be <code>1.0</code>. This is perfect since we can just discard 
+<span style="background: linear-gradient(to right, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0.35));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">alpha</span>
+part and use
+<span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span>
+instead and the conversion from 
+<span style="color: rgba(255, 0, 0, 1.0)">R</span><span style="color: rgba(0, 255, 0, 1.0)">G</span><span style="color: rgba(0, 0, 255, 1.0)">B</span>
+to
+<span style="color: rgba(0, 255, 255, 1.0)">C</span><span style="color: rgba(255, 0, 255, 1.0)">Y</span><span style="color: rgba(255, 255, 0, 1.0)">M</span><span style="color: rgba(150, 150, 150, 1.0)">K</span>
+is significantly easier. We just can use the formulas </p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>K = 1 - max(R,G,B)
+</span><span>C = (1-R-K) / (1-K)
+</span><span>Y = (1-G-K) / (1-K)
+</span><span>M = (1-B-K) / (1-K)
+</span></code></pre>
+<p><a href="https://www.rapidtables.com/convert/color/rgb-to-cmyk.html">from this nice site</a> and then we are done.</p>
+<p>And this wraps up the third part of our Half Tone Shader adventure.</p>
+<p><a href="../halftoneshaderp4">Go to part 4</a></p>
 
 
         
